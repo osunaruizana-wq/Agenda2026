@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="My Agenda"/>
+<title>My Agenda 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #F1E6D6; --bg-deep: #e8d9c4; --bg-card: #faf5ee;
+    --border: #d9c9b4; --border-soft: #e8d9c4;
+    --accent: #D57B3D; --accent-dark: #b8632a;
+    --lavender: #C6ACCD; --purple: #5C446C;
+    --brown: #A06949; --espresso: #4E2511;
+    --muted: #c4a882; --white: #FDFAF6;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg); color: var(--espresso);
+    font-family: 'DM Serif Display', Georgia, serif;
+    min-height: 100vh; overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app { min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 52px 20px 14px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(78,37,17,0.06);
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .app-title { font-size: 13px; letter-spacing: 4px; text-transform: uppercase; color: var(--brown); font-family: 'DM Sans', sans-serif; font-weight: 500; }
+  .nav-row { display: flex; gap: 6px; }
+  .nav-btn {
+    padding: 7px 14px; border-radius: 20px; border: none; cursor: pointer;
+    font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    font-family: 'DM Sans', sans-serif; font-weight: 600;
+    background: transparent; color: var(--brown); transition: all 0.2s;
+  }
+  .nav-btn.active { background: var(--purple); color: var(--white); }
+  .month-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+  .month-title { font-size: 28px; letter-spacing: -0.5px; color: var(--espresso); line-height: 1; }
+  .month-year { font-size: 14px; color: var(--brown); font-family: 'DM Sans', sans-serif; margin-top: 2px; }
+  .arrow-btn {
+    background: none; border: 1px solid var(--border); color: var(--brown);
+    width: 34px; height: 34px; border-radius: 17px; cursor: pointer; font-size: 18px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .arrow-btn:disabled { opacity: 0.3; }
+
+  /* CONTENT */
+  .content { padding-bottom: calc(80px + var(--safe-bottom)); }
+  .section { padding: 20px 20px 0; }
+  .section-label {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent);
+    font-family: 'DM Sans', sans-serif; font-weight: 700; margin-bottom: 12px;
+  }
+  .goal-input {
+    width: 100%; background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; color: var(--espresso);
+    font-size: 14px; font-family: 'DM Sans', sans-serif; resize: none;
+    outline: none; line-height: 1.6;
+  }
+
+  /* EVENTS LIST */
+  .event-summary-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 0; border-bottom: 1px solid var(--border-soft);
+  }
+  .event-day-label { font-size: 11px; color: var(--accent); font-family: 'DM Sans', sans-serif; min-width: 46px; }
+  .event-day-text { font-size: 13px; color: var(--brown); font-family: 'DM Sans', sans-serif; flex: 1; }
+  .empty-note { font-size: 12px; color: var(--muted); font-family: 'DM Sans', sans-serif; padding: 4px 0; }
+
+  /* DAY LIST */
+  .days-section { padding: 20px 0 0; }
+  .day-row {
+    display: flex; align-items: center; padding: 10px 14px;
+    border-bottom: 1px solid var(--border-soft); cursor: pointer;
+    border-left: 2px solid transparent; transition: all 0.15s;
+  }
+  .day-row.selected { background: #ede0d0; border-left-color: var(--accent); }
+  .day-num {
+    width: 32px; height: 32px; border-radius: 16px; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 14px; font-family: 'DM Sans', sans-serif; font-weight: 600;
+    color: var(--espresso);
+  }
+  .day-num.today { background: var(--accent); color: var(--white); }
+  .day-name-label { font-size: 11px; color: var(--muted); font-family: 'DM Sans', sans-serif; margin-left: 8px; min-width: 28px; }
+  .event-dots { display: flex; align-items: center; margin-left: 4px; }
+  .event-dot { width: 5px; height: 5px; border-radius: 3px; background: var(--purple); margin: 0 2px; }
+  .event-preview { font-size: 12px; color: var(--brown); font-family: 'DM Sans', sans-serif; margin-left: 4px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .add-event-btn {
+    background: none; border: 1px dashed var(--border); color: var(--muted);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer;
+    font-size: 11px; font-family: 'DM Sans', sans-serif; margin-left: auto; white-space: nowrap;
+  }
+
+  /* DAY DETAIL */
+  .day-detail {
+    padding: 16px 20px; background: var(--bg-deep);
+    border-top: 1px solid var(--border);
+  }
+  .detail-event-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 0; border-bottom: 1px solid var(--border-soft);
+  }
+  .detail-event-text { flex: 1; font-size: 13px; color: var(--espresso); font-family: 'DM Sans', sans-serif; }
+  .delete-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 0 4px; }
+  .add-full-btn {
+    margin-top: 10px; display: block; width: 100%;
+    background: none; border: 1px dashed var(--border); color: var(--muted);
+    border-radius: 8px; padding: 9px; cursor: pointer;
+    font-size: 12px; font-family: 'DM Sans', sans-serif;
+  }
+
+  /* WEEK VIEW */
+  .week-selector { display: flex; gap: 6px; padding: 12px 20px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .week-chip {
+    flex-shrink: 0; padding: 6px 12px; border-radius: 16px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer;
+    font-size: 11px; font-family: 'DM Sans', sans-serif;
+  }
+  .week-chip.active { border-color: var(--accent); background: rgba(213,123,61,0.13); color: var(--accent); }
+  .week-day-card {
+    padding: 14px 20px; border-bottom: 1px solid var(--border-soft);
+    border-left: 3px solid transparent;
+  }
+  .week-day-card.today { border-left-color: var(--accent); background: #faf0e6; }
+  .week-day-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+  .week-day-name { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--brown); font-family: 'DM Sans', sans-serif; }
+  .week-day-num { font-size: 22px; color: var(--espresso); font-family: 'DM Serif Display', serif; }
+  .week-day-num.today { color: var(--accent); }
+  .week-event-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .week-event-dot { width: 4px; height: 4px; border-radius: 2px; background: var(--purple); flex-shrink: 0; }
+  .week-event-text { font-size: 12px; color: var(--brown); font-family: 'DM Sans', sans-serif; }
+  .week-note-input {
+    width: 100%; background: var(--white); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; color: var(--espresso);
+    font-size: 12px; font-family: 'DM Sans', sans-serif; outline: none;
+    margin-top: 4px;
+  }
+
+  /* ROUTINE VIEW */
+  .date-strip { display: flex; gap: 6px; padding: 12px 20px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .date-chip {
+    flex-shrink: 0; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; text-align: center; min-width: 44px;
+  }
+  .date-chip.active { border-color: var(--accent); background: rgba(213,123,61,0.13); color: var(--accent); }
+  .date-chip-day { font-size: 9px; letter-spacing: 1px; }
+  .date-chip-num { font-size: 16px; font-weight: 600; }
+  .routine-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .routine-col { padding: 20px 14px 20px 20px; }
+  .routine-col-r { padding: 20px 20px 20px 14px; border-left: 1px solid var(--border); }
+  .routine-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid var(--border-soft); cursor: pointer;
+  }
+  .check-box {
+    width: 18px; height: 18px; border-radius: 9px; flex-shrink: 0;
+    border: 1.5px solid var(--lavender); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .check-box.checked { background: var(--purple); border-color: var(--purple); }
+  .check-mark { font-size: 10px; color: var(--white); font-weight: 700; display: none; }
+  .check-box.checked .check-mark { display: block; }
+  .routine-text { font-size: 12px; font-family: 'DM Sans', sans-serif; color: var(--espresso); line-height: 1.4; }
+  .routine-text.done { color: var(--muted); text-decoration: line-through; }
+  .add-routine-btn {
+    margin-top: 10px; width: 100%;
+    background: none; border: 1px dashed var(--border); color: var(--muted);
+    border-radius: 8px; padding: 8px; cursor: pointer;
+    font-size: 11px; font-family: 'DM Sans', sans-serif;
+  }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--white); border-top: 1px solid var(--border);
+    display: flex; padding: 12px 0; padding-bottom: calc(12px + var(--safe-bottom));
+    z-index: 100; box-shadow: 0 -2px 12px rgba(78,37,17,0.06);
+  }
+  .bottom-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 4px; background: none; border: none; cursor: pointer;
+    color: var(--muted); transition: color 0.2s;
+  }
+  .bottom-btn.active { color: var(--purple); }
+  .bottom-icon { font-size: 20px; }
+  .bottom-label { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; font-family: 'DM Sans', sans-serif; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(78,37,17,0.35);
+    z-index: 200; display: flex; align-items: flex-end;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-box {
+    background: var(--white); border-radius: 20px 20px 0 0;
+    padding: 24px; width: 100%; border-top: 1px solid var(--border);
+    padding-bottom: calc(24px + var(--safe-bottom));
+  }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 18px; margin-bottom: 16px; color: var(--espresso); }
+  .modal-input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; color: var(--espresso);
+    font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none;
+    margin-bottom: 10px;
+  }
+  .modal-save {
+    width: 100%; background: var(--purple); border: none; border-radius: 12px;
+    padding: 13px; color: var(--white); font-size: 14px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; letter-spacing: 1px;
+  }
+  .modal-cancel {
+    width: 100%; background: transparent; border: 1px solid var(--border);
+    border-radius: 12px; padding: 13px; color: var(--brown); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; margin-top: 8px;
+  }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <span class="app-title">My Agenda</span>
+      <div class="nav-row">
+        <button class="nav-btn active" onclick="switchView('month')" id="btn-month">Month</button>
+        <button class="nav-btn" onclick="switchView('week')" id="btn-week">Week</button>
+        <button class="nav-btn" onclick="switchView('routine')" id="btn-routine">Routine</button>
+      </div>
+    </div>
+    <div class="month-nav">
+      <button class="arrow-btn" onclick="prevMonth()" id="prev-btn">&#8249;</button>
+      <div style="text-align:center">
+        <div class="month-title" id="month-title"></div>
+        <div class="month-year">2026</div>
+      </div>
+      <button class="arrow-btn" onclick="nextMonth()" id="next-btn">&#8250;</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- MONTH VIEW -->
+    <div class="view active" id="view-month">
+      <div class="section" style="margin-top:8px">
+        <div class="section-label">Monthly Focus</div>
+        <textarea class="goal-input" rows="3" placeholder="What do you want to achieve this month?" id="goal-input" oninput="saveGoal(this.value)"></textarea>
+      </div>
+      <div class="section" style="margin-top:20px">
+        <div class="section-label">Events This Month</div>
+        <div id="events-summary"></div>
+      </div>
+      <div class="days-section">
+        <div class="section-label" style="padding-left:20px">Days</div>
+        <div id="day-list"></div>
+      </div>
+      <div id="day-detail"></div>
+    </div>
+
+    <!-- WEEK VIEW -->
+    <div class="view" id="view-week">
+      <div class="week-selector" id="week-selector"></div>
+      <div id="week-days"></div>
+        </div>
+
+    <!-- ROUTINE VIEW -->
+    <div class="view" id="view-routine">
+      <div class="date-strip" id="date-strip"></div>
+      <div class="routine-grid">
+        <div class="routine-col">
+          <div class="section-label" style="margin-bottom:14px">🌅 Morning</div>
+          <div id="morning-list"></div>
+          <button class="add-routine-btn" onclick="openModal('morning')">+ add</button>
+        </div>
+        <div class="routine-col-r">
+          <div class="section-label" style="margin-bottom:14px">🌙 Night</div>
+          <div id="night-list"></div>
+          <button class="add-routine-btn" onclick="openModal('night')">+ add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="bottom-btn active" onclick="switchView('month')" id="nav-month">
+      <span class="bottom-icon">📅</span>
+      <span class="bottom-label">Month</span>
+    </button>
+    <button class="bottom-btn" onclick="switchView('week')" id="nav-week">
+      <span class="bottom-icon">📆</span>
+      <span class="bottom-label">Week</span>
+    </button>
+    <button class="bottom-btn" onclick="switchView('routine')" id="nav-routine">
+      <span class="bottom-icon">✅</span>
+      <span class="bottom-label">Routine</span>
+    </button>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay hidden" id="modal" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title" id="modal-title">Add item</div>
+      <input class="modal-input" id="modal-input" placeholder="Type here…" onkeydown="if(event.key==='Enter')saveModal()"/>
+      <button class="modal-save" onclick="saveModal()">Save</button>
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────────────────────────
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS_SHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const DAY_NAMES_SHORT = ["SU","MO","TU","WE","TH","FR","SA"];
+const STORE_KEY = "agenda2026_v1";
+
+const DEFAULT_MORNING = ["Wake up 8 am","Take a walk","Have breakfast","Start at 10 am","Turmeric ginger tea","Lunch 1 pm"];
+const DEFAULT_NIGHT = ["Dinner 8 pm","Make lunch","Shower before 11 pm","Skin care","Brush teeth","Drink sleep tea","Charge devices","Make to do list"];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const today = new Date();
+const todayY = today.getFullYear(), todayM = today.getMonth(), todayD = today.getDate();
+let curMonth = Math.max(5, Math.min(11, todayM));
+let selectedDay = null;
+let currentView = "month";
+let activeWeekIdx = 0;
+let routineDateKey = `${todayY}-${todayM}-${todayD}`;
+let modalContext = null; // {type, key}
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch { return {}; }
+}
+function saveData(d) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch {}
+}
+function getData(path, fallback) {
+  const keys = path.split(".");
+  let o = appData;
+  for (const k of keys) { if (o == null || o[k] === undefined) return fallback; o = o[k]; }
+  return o ?? fallback;
+}
+function setData(path, value) {
+  const keys = path.split(".");
+  let o = appData;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!o[keys[i]] || typeof o[keys[i]] !== "object") o[keys[i]] = {};
+    o = o[keys[i]];
+  }
+  o[keys[keys.length - 1]] = value;
+  saveData(appData);
+}
+
+let appData = loadData();
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function firstDayOfWeek(y, m) { const d = new Date(y, m, 1).getDay(); return d === 0 ? 6 : d - 1; }
+function getDayName(day) { const d = new Date(2026, curMonth, day).getDay(); return DAYS_SHORT[d === 0 ? 6 : d - 1]; }
+function getWeeks(y, m) {
+  const total = daysInMonth(y, m), first = firstDayOfWeek(y, m);
+  const weeks = []; let day = 1 - first;
+  while (day <= total) {
+    const w = [];
+    for (let i = 0; i < 7; i++, day++) w.push(day >= 1 && day <= total ? day : null);
+    weeks.push(w);
+  }
+  return weeks;
+}
+function e(tag, cls, html) {
+  const el = document.createElement(tag);
+  if (cls) el.className = cls;
+  if (html !== undefined) el.innerHTML = html;
+  return el;
+}
+
+// ── View switching ────────────────────────────────────────────────────────────
+function switchView(v) {
+  currentView = v;
+  ["month","week","routine"].forEach(x => {
+    document.getElementById("view-" + x).classList.toggle("active", x === v);
+    document.getElementById("btn-" + x).classList.toggle("active", x === v);
+    document.getElementById("nav-" + x).classList.toggle("active", x === v);
+  });
+  if (v === "month") renderMonth();
+  if (v === "week") renderWeek();
+  if (v === "routine") renderRoutine();
+}
+
+// ── Month navigation ──────────────────────────────────────────────────────────
+function prevMonth() { if (curMonth > 5) { curMonth--; selectedDay = null; renderMonth(); } }
+function nextMonth() { if (curMonth < 11) { curMonth++; selectedDay = null; renderMonth(); } }
+function updateMonthHeader() {
+  document.getElementById("month-title").textContent = MONTHS[curMonth];
+  document.getElementById("prev-btn").disabled = curMonth <= 5;
+  document.getElementById("next-btn").disabled = curMonth >= 11;
+}
+
+// ── Month render ──────────────────────────────────────────────────────────────
+function renderMonth() {
+  updateMonthHeader();
+  const monthKey = `2026-${curMonth}`;
+  // Goal
+  document.getElementById("goal-input").value = getData(`goals.${monthKey}`, "");
+  // Events summary
+  const total = daysInMonth(2026, curMonth);
+  const allEvts = [];
+  for (let d = 1; d <= total; d++) {
+    const evts = getData(`events.2026-${curMonth}-${d}`, []);
+    evts.forEach(ev => allEvts.push({day: d, text: ev}));
+  }
+  const sum = document.getElementById("events-summary");
+  sum.innerHTML = "";
+  if (!allEvts.length) {
+    const p = e("div","empty-note","Tap any day below to add events");
+    sum.appendChild(p);
+  } else {
+    allEvts.forEach(ev => {
+      const row = e("div","event-summary-row");
+      row.innerHTML = `<span class="event-day-label">${getDayName(ev.day)} ${ev.day}</span><span class="event-day-text">${ev.text}</span>`;
+      sum.appendChild(row);
+    });
+  }
+  // Day list
+  const list = document.getElementById("day-list");
+  list.innerHTML = "";
+  for (let day = 1; day <= total; day++) {
+    const isToday = todayY === 2026 && todayM === curMonth && todayD === day;
+    const evts = getData(`events.2026-${curMonth}-${day}`, []);
+    const row = e("div", "day-row" + (day === selectedDay ? " selected" : ""));
+    // day number
+    const num = e("div", "day-num" + (isToday ? " today" : ""), day);
+    row.appendChild(num);
+    // day name
+    row.appendChild(e("span","day-name-label", getDayName(day)));
+    // dots + preview
+    if (evts.length) {
+      const dots = e("div","event-dots");
+      evts.slice(0,3).forEach(() => dots.appendChild(e("div","event-dot")));
+      row.appendChild(dots);
+      row.appendChild(e("span","event-preview", evts[0] + (evts.length > 1 ? ` +${evts.length-1}` : "")));
+    }
+    // add button when selected
+    if (day === selectedDay) {
+      const btn = e("button","add-event-btn","+ event");
+      btn.onclick = ev => { ev.stopPropagation(); openModal("event", day); };
+      row.appendChild(btn);
+    }
+    row.onclick = () => {
+      selectedDay = (day === selectedDay) ? null : day;
+      renderMonth();
+    };
+    list.appendChild(row);
+  }
+  // Day detail
+  renderDayDetail();
+}
+
+function renderDayDetail() {
+  const detail = document.getElementById("day-detail");
+  detail.innerHTML = "";
+  if (!selectedDay) return;
+  const key = `events.2026-${curMonth}-${selectedDay}`;
+  const evts = getData(key, []);
+  const box = e("div","day-detail");
+  const lbl = e("div","section-label");
+  lbl.style.marginBottom = "10px";
+  lbl.textContent = `${getDayName(selectedDay)} ${selectedDay} · Events`;
+  box.appendChild(lbl);
+  evts.forEach((ev, i) => {
+    const row = e("div","detail-event-row");
+    const dot = e("div","event-dot"); dot.style.flexShrink = "0";
+    const txt = e("span","detail-event-text", ev);
+    const del = e("button","delete-btn","×");
+    del.onclick = () => {
+      const updated = evts.filter((_,j) => j !== i);
+      setData(key, updated);
+      renderMonth();
+    };
+    row.appendChild(dot); row.appendChild(txt); row.appendChild(del);
+    box.appendChild(row);
+  });
+  const addBtn = e("button","add-full-btn","+ Add Event");
+  addBtn.onclick = () => openModal("event", selectedDay);
+  box.appendChild(addBtn);
+  detail.appendChild(box);
+}
+
+function saveGoal(val) {
+  setData(`goals.2026-${curMonth}`, val);
+}
+
+// ── Week render ───────────────────────────────────────────────────────────────
+function renderWeek() {
+  updateMonthHeader();
+  const weeks = getWeeks(2026, curMonth);
+  // find active week
+  if (todayY === 2026 && todayM === curMonth) {
+    const idx = weeks.findIndex(w => w.includes(todayD));
+    if (idx !== -1) activeWeekIdx = idx;
+  }
+  // selector
+  const sel = document.getElementById("week-selector");
+  sel.innerHTML = "";
+  weeks.forEach((w, wi) => {
+    const first = w.find(d => d !== null);
+    const last = [...w].reverse().find(d => d !== null);
+    const chip = e("button","week-chip" + (wi === activeWeekIdx ? " active" : ""), `${first}–${last}`);
+    chip.onclick = () => { activeWeekIdx = wi; renderWeekDays(weeks); renderWeekSelector(weeks); };
+    sel.appendChild(chip);
+  });
+  renderWeekDays(weeks);
+}
+function renderWeekSelector(weeks) {
+  const chips = document.getElementById("week-selector").children;
+  [...chips].forEach((c,i) => c.classList.toggle("active", i === activeWeekIdx));
+}
+function renderWeekDays(weeks) {
+  const week = weeks[activeWeekIdx] || weeks[0];
+  const container = document.getElementById("week-days");
+  container.innerHTML = "";
+  week.forEach((day, i) => {
+    const isToday = day && todayY === 2026 && todayM === curMonth && todayD === day;
+    const card = e("div","week-day-card" + (isToday ? " today" : ""));
+    const hdr = e("div","week-day-header");
+    hdr.appendChild(e("span","week-day-name", DAYS_SHORT[i]));
+    if (day) {
+      const num = e("span","week-day-num" + (isToday ? " today" : ""), day);
+      hdr.appendChild(num);
+    } else {
+      hdr.appendChild(e("span","week-day-num","–"));
+    }
+    card.appendChild(hdr);
+    if (day) {
+      const evts = getData(`events.2026-${curMonth}-${day}`, []);
+      evts.forEach(ev => {
+        const row = e("div","week-event-row");
+        row.appendChild(e("div","week-event-dot"));
+        row.appendChild(e("span","week-event-text", ev));
+        card.appendChild(row);
+      });
+      const noteInp = e("input","week-note-input");
+      noteInp.placeholder = "Notes for this day…";
+      noteInp.value = getData(`weeknotes.2026-${curMonth}-${day}`, "");
+      noteInp.oninput = () => setData(`weeknotes.2026-${curMonth}-${day}`, noteInp.value);
+      card.appendChild(noteInp);
+    }
+    container.appendChild(card);
+  });
+}
+
+// ── Routine render ────────────────────────────────────────────────────────────
+function renderRoutine() {
+  // date strip — today + next 6 days
+  const strip = document.getElementById("date-strip");
+  strip.innerHTML = "";
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today); d.setDate(todayD + i);
+    const dd = d.getDate(), mm = d.getMonth(), yy = d.getFullYear();
+    const key = `${yy}-${mm}-${dd}`;
+    const chip = e("button","date-chip" + (key === routineDateKey ? " active" : ""));
+    chip.innerHTML = `<div class="date-chip-day">${DAY_NAMES_SHORT[d.getDay()]}</div><div class="date-chip-num">${dd}</div>`;
+    chip.onclick = () => { routineDateKey = key; renderRoutine(); };
+    strip.appendChild(chip);
+  }
+  renderRoutineList("morning", DEFAULT_MORNING);
+  renderRoutineList("night", DEFAULT_NIGHT);
+}
+function renderRoutineList(part, defaults) {
+  const items = getData(`routines.${part}`, defaults);
+  const container = document.getElementById(`${part}-list`);
+  container.innerHTML = "";
+  items.forEach((item, idx) => {
+    const checked = getData(`checks.${routineDateKey}.${part}.${idx}`, false);
+    const row = e("div","routine-item");
+    const box = e("div","check-box" + (checked ? " checked" : ""));
+    box.innerHTML = `<span class="check-mark">✓</span>`;
+    const txt = e("span","routine-text" + (checked ? " done" : ""), item);
+    row.appendChild(box); row.appendChild(txt);
+    row.onclick = () => {
+      setData(`checks.${routineDateKey}.${part}.${idx}`, !checked);
+      renderRoutine();
+    };
+    container.appendChild(row);
+  });
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal(type, arg) {
+  modalContext = {type, arg};
+  const titles = { event: "Add Event", morning: "Add Morning Task", night: "Add Night Task" };
+  document.getElementById("modal-title").textContent = titles[type] || "Add";
+  document.getElementById("modal-input").value = "";
+  document.getElementById("modal").classList.remove("hidden");
+  setTimeout(() => document.getElementById("modal-input").focus(), 100);
+}
+function closeModal() {
+  document.getElementById("modal").classList.add("hidden");
+  modalContext = null;
+}
+function saveModal() {
+  const val = document.getElementById("modal-input").value.trim();
+  if (!val || !modalContext) return;
+  const {type, arg} = modalContext;
+  if (type === "event") {
+    const key = `events.2026-${curMonth}-${arg}`;
+    const cur = getData(key, []);
+    setData(key, [...cur, val]);
+    closeModal();
+    renderMonth();
+  } else if (type === "morning" || type === "night") {
+    const key = `routines.${type}`;
+    const defaults = type === "morning" ? DEFAULT_MORNING : DEFAULT_NIGHT;
+    const cur = getData(key, defaults);
+    setData(key, [...cur, val]);
+    closeModal();
+    renderRoutine();
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderMonth();
+</script>
+</body>
+</html>
